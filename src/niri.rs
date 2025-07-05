@@ -160,6 +160,8 @@ use crate::protocols::mutter_x11_interop::MutterX11InteropManagerState;
 use crate::protocols::output_management::OutputManagementManagerState;
 use crate::protocols::screencopy::{Screencopy, ScreencopyBuffer, ScreencopyManagerState};
 use crate::protocols::virtual_pointer::VirtualPointerManagerState;
+#[cfg(feature = "xdp-gnome-remote-desktop")]
+use crate::remote_desktop::RemoteDesktopState;
 use crate::render_helpers::blur::BlurOptions;
 use crate::render_helpers::debug::push_opaque_regions;
 use crate::render_helpers::primary_gpu_texture::PrimaryGpuTextureRenderElement;
@@ -275,8 +277,13 @@ pub struct Niri {
     /// startup, libinput will immediately send a closed event.
     pub is_lid_closed: bool,
 
+    /// Tracked libinput devices.
     pub devices: HashSet<input::Device>,
+
+    /// Tracked libinput tablet devices.
     pub tablets: HashMap<input::Device, TabletData>,
+
+    /// Tracked libinput touch devices.
     pub touch: HashSet<input::Device>,
 
     /// Output capture sessions. Kept out of the protocol state because each one needs a damage
@@ -435,6 +442,9 @@ pub struct Niri {
 
     #[cfg(feature = "xdp-gnome-screencast")]
     pub casting: Screencasting,
+
+    #[cfg(feature = "xdp-gnome-remote-desktop")]
+    pub remote_desktop: RemoteDesktopState,
 
     #[cfg(test)]
     pub test_action_count: usize,
@@ -720,6 +730,7 @@ impl KeyboardFocus {
 }
 
 pub struct State {
+    /// The backend for input events and graphical output.
     pub backend: Backend,
     pub niri: Niri,
 }
@@ -2779,6 +2790,9 @@ impl Niri {
 
             #[cfg(feature = "xdp-gnome-screencast")]
             casting: screencasting,
+
+            #[cfg(feature = "xdp-gnome-remote-desktop")]
+            remote_desktop: RemoteDesktopState::default(),
 
             #[cfg(test)]
             test_action_count: 0,
